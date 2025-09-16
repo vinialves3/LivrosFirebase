@@ -87,6 +87,7 @@ fun CadastroLivros(navController: NavController) {
 
 
 
+
             },
             bottomBar = { BottomAppBar { } },
             floatingActionButton = {
@@ -161,6 +162,8 @@ fun CadastroLivros(navController: NavController) {
 
 
 
+
+
                 // textfield genero
 
                 Button(
@@ -176,6 +179,8 @@ fun CadastroLivros(navController: NavController) {
                             genero = ""
                         }
                     },
+
+
 
 
 

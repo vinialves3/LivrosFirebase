@@ -1,14 +1,13 @@
 package com.alves.livrosfirebase.view
 
-
+// imports basicos q o codigo usa
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,20 +20,21 @@ import com.alves.livrosfirebase.datasource.DataSource
 import com.alves.livrosfirebase.ui.theme.*
 import kotlinx.coroutines.launch
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListaLivros(navController: NavController) {
+    // cria o objeto do banco
     val dataSource = DataSource()
+    // lista q guarda os livros q vem do firebase
     var listaLivros by remember { mutableStateOf(listOf<Map<String, Any>>()) }
+    // mensagem de erro ou sucesso
     var mensagem by remember { mutableStateOf("") }
-    var livroSelecionado by remember { mutableStateOf<Map<String, Any>?>(null) }
+    // pra rodar coroutines (coisas assincronas)
     val scope = rememberCoroutineScope()
-    // variaveis p lembrar dos livros e detalhes de cada um
+    // estado do menu lateral (drawer)
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-
-
+    // quando a tela abre, busca os livros do firebase
     LaunchedEffect(Unit) {
         dataSource.listarLivros(
             onResult = { listaLivros = it },
@@ -42,15 +42,7 @@ fun ListaLivros(navController: NavController) {
         )
     }
 
-
-
-
-
-
-
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    // menu lateral
-
+    // esse eh o menu lateral do app
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -64,31 +56,20 @@ fun ListaLivros(navController: NavController) {
                 )
             }
         }
-    )
-
-
-
-
-    // drawer menu
-
-    {
+    ) {
+        // estrutura principal da tela
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
+                // barra de cima da tela
                 TopAppBar(
-                    title = {
-                        Text(
-                            if (livroSelecionado == null) "Lista de Livros"
-                            else "Detalhes do Livro"
-                        )
-
-                    },
+                    title = { Text("Lista de Livros") },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = BlueDark,
                         titleContentColor = White
                     ),
-
                     navigationIcon = {
+                        // botao do menu hamburguer (abre e fecha drawer)
                         IconButton(
                             onClick = {
                                 scope.launch {
@@ -96,136 +77,136 @@ fun ListaLivros(navController: NavController) {
                                     else drawerState.close()
                                 }
                             }
-                        )
-                        {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu",
-                                tint = White, modifier = Modifier.size(30.dp))
+                        ) {
+                            Icon(
+                                Icons.Default.Menu,
+                                contentDescription = "Menu",
+                                tint = White,
+                                modifier = Modifier.size(30.dp)
+                            )
                         }
                     }
                 )
-
-
-
             },
-            bottomBar = { BottomAppBar { } },
+            bottomBar = { BottomAppBar { } }, // rodapé vazio por enquanto
             floatingActionButton = {
-                if (livroSelecionado == null) {
-                    FloatingActionButton(onClick = { navController.navigate("CadastroLivros") }) {
-                        Icon(Icons.Default.Add, contentDescription = "Adicionar")
-                    }
+                // botao flutuante q leva pro cadastro de livros
+                FloatingActionButton(onClick = { navController.navigate("CadastroLivros") }) {
+                    Icon(Icons.Default.Info, contentDescription = "Adicionar")
                 }
             }
         )
 
 
-
-
         { innerPadding ->
-
-            if (livroSelecionado == null) {
-                // lista livros
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(GrayLight)
-                        .padding(innerPadding)
-                )
+            // conteudo da tela (embaixo do topbar)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(GrayLight)
+                    .padding(innerPadding)
+            )
 
 
 
+            {
+                // lista vertical (scroll) de livros
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(listaLivros) { livro ->
 
 
-                {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(listaLivros) { livro ->
-                            val t = livro["titulo"] as? String ?: "Sem título"
-                            val a = livro["autor"] as? String ?: "Sem autor"
-                            val g = livro["genero"] as? String ?: "Sem gênero"
-                            // pega os dados do livro colocacos nos fields
+                        // pega os valores do livro, se nao tiver coloca texto default
+                        val t = livro["titulo"] as? String ?: "Sem título"
+                        val a = livro["autor"] as? String ?: "Sem autor"
+                        val g = livro["genero"] as? String ?: "Sem gênero"
 
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .clickable { livroSelecionado = livro },
-                                elevation = CardDefaults.cardElevation(4.dp),
-                                colors = CardDefaults.cardColors(containerColor = White)
+
+
+
+
+                        // card q mostra o livro
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            elevation = CardDefaults.cardElevation(4.dp),
+                            colors = CardDefaults.cardColors(containerColor = White)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(16.dp)
                             )
 
 
 
 
+
                             {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(16.dp)
+                                // coluna com as infos do livro
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("📌 $t", fontWeight = FontWeight.Bold, color = BlueDark)
+                                    Text("Autor: $a", color = GrayDark)
+                                    Text("Gênero: $g", color = GrayDark)
+                                }
+
+
+
+
+
+                                // botao de deletar livro
+                                IconButton(
+                                    onClick = {
+                                        dataSource.deletarLivro(t)
+                                        dataSource.listarLivros(
+                                            onResult = { listaLivros = it },
+                                            onFailure = { mensagem = "Erro: ${it.message}" }
+                                        )
+                                    }
+                                )
+
+
+
+                                {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Excluir livro",
+                                        tint = androidx.compose.ui.graphics.Color.Red,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+
+
+
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                // botao q leva pra tela de detalhes
+                                IconButton(
+                                    onClick = {
+                                        navController.navigate("DetalhesLivro/${t}/${a}/${g}")
+                                    }
                                 )
 
 
 
 
                                 {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text("📌 $t", fontWeight = FontWeight.Bold, color = BlueDark)
-                                        Text("Autor: $a", color = GrayDark)
-                                        Text("Gênero: $g", color = GrayDark)
-                                    }
                                     Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = "Excluir livro",
-                                        tint = androidx.compose.ui.graphics.Color.Red,
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .clickable {
-                                                dataSource.deletarLivro(t)
-                                                dataSource.listarLivros(
-                                                    onResult = { listaLivros = it },
-                                                    onFailure = { mensagem = "Erro: ${it.message}" }
-                                                )
-                                            }
+                                        Icons.Default.Info,
+                                        contentDescription = "Detalhes do livro",
+                                        tint = BlueDark,
+                                        modifier = Modifier.size(24.dp)
                                     )
                                 }
                             }
                         }
                     }
-
-
-
-
-
-                    Text(text = mensagem, modifier = Modifier.padding(8.dp))
                 }
-            }
-            else {
-                // detalhes livro especifico
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(GrayLight)
-                        .padding(innerPadding)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Top
-                )
 
 
 
-
-
-                {
-                    Text("Título: ${livroSelecionado!!["titulo"]}", fontWeight = FontWeight.Bold, color = BlueDark)
-                    Text("Autor: ${livroSelecionado!!["autor"]}", color = GrayDark)
-                    Text("Gênero: ${livroSelecionado!!["genero"]}", color = GrayDark)
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Button(
-                        onClick = { livroSelecionado = null },
-                        colors = ButtonDefaults.buttonColors(containerColor = Orange),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text("Voltar para lista", color = White)
-                    }
-                }
+                // mostra mensagens de erro ou info
+                Text(text = mensagem, modifier = Modifier.padding(8.dp))
             }
         }
     }
