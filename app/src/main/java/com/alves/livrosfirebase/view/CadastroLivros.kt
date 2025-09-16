@@ -168,8 +168,8 @@ fun CadastroLivros(navController: NavController) {
                         if (titulo.isNotBlank() && autor.isNotBlank() && genero.isNotBlank()) {
                             dataSource.salvarLivro(
                                 titulo, autor, genero,
-                                onSuccess = { mensagem = "😁 Livro cadastrado" },
-                                onFailure = { _ -> mensagem = "🤔 Erro no cadastro" }
+                                onSuccess = { mensagem = "😁 Livro cadastrado!!!!!" },
+                                onFailure = { _ -> mensagem = "🤔 Erro no cadastro!!!!!" }
                             )
                             titulo = ""
                             autor = ""
