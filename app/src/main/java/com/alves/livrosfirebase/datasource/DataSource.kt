@@ -1,43 +1,51 @@
 package com.alves.livrosfirebase.datasource
 
-
 import com.google.firebase.firestore.FirebaseFirestore
 
-
-
-
-
 class DataSource {
-// iniciando classe
+
+
+
+
 
     private val db = FirebaseFirestore.getInstance()
 
-    // funcao p slavar o livro
-    fun salvarLivro(
-        titulo: String,
-        autor: String,
+
+
+
+
+    fun salvarTarefa(
+        tarefa: String,
         genero: String,
+        autor: String,
+        descricao: String,
         onSuccess: () -> Unit,
         onFailure: (Any) -> Unit
-    ) {
+    )
 
-        // receber dados livro
 
-        val livroMap = hashMapOf(
-            "titulo" to titulo,
+
+
+
+    {
+        val tarefaMap = hashMapOf(
+            "tarefa" to tarefa,
             "autor" to autor,
-            "genero" to genero
+            "genero" to genero,
+            "descricao" to descricao
         )
 
-        // cria mapa com dados p enviar pro firestore
 
-        db.collection("Livros")
-            .document(titulo)
-            .set(livroMap)
+
+
+
+
+
+        db.collection("Tarefas")
+            .document(tarefa)
+            .set(tarefaMap)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { erro -> onFailure(erro) }
-        // salvando livro pelo id
-        // onsucess se deu certo, onfailure se deu errado
     }
 
 
@@ -45,31 +53,39 @@ class DataSource {
 
 
 
-    // lista livros
-    fun listarLivros(
+
+    fun listarTarefas(
         onResult: (List<Map<String, Any>>) -> Unit,
         onFailure: (Exception) -> Unit
-    ) {
+    )
 
 
-        // buscar livros e retornar em lista
 
-        db.collection("Livros")
+
+
+    {
+        db.collection("Tarefas")
             .get()
             .addOnSuccessListener { result ->
                 val lista = result.mapNotNull { it.data }
                 onResult(lista)
             }
+
+
             .addOnFailureListener { e -> onFailure(e) }
-        // transforma dados em uma lista
-        // retorna onresult ou onfdailure
     }
 
-    // excluir livro
-    fun deletarLivro(titulo: String) {
-        db.collection("Livros")
-            .document(titulo)
-            .delete()
-        // excluir livro pelo id
+
+
+
+
+
+
+    fun deletarTarefa(tarefa: String) {
+        db.collection("Tarefas").document(tarefa).delete()
+    }
+
+    fun descricaoTarefa(tarefa: String) {
+        // função ainda não implementada
     }
 }

@@ -1,75 +1,167 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
 package com.alves.livrosfirebase.view
 
-// imports basicos q o codigo usa
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.alves.livrosfirebase.datasource.Authentication
 import com.alves.livrosfirebase.datasource.DataSource
-import com.alves.livrosfirebase.ui.theme.*
 import kotlinx.coroutines.launch
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListaLivros(navController: NavController) {
-    // cria o objeto do banco
-    val dataSource = DataSource()
-    // lista q guarda os livros q vem do firebase
-    var listaLivros by remember { mutableStateOf(listOf<Map<String, Any>>()) }
-    // mensagem de erro ou sucesso
-    var mensagem by remember { mutableStateOf("") }
-    // pra rodar coroutines (coisas assincronas)
-    val scope = rememberCoroutineScope()
-    // estado do menu lateral (drawer)
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    // quando a tela abre, busca os livros do firebase
+
+
+
+fun ListaLivros(navController: NavController) {
+
+
+
+    val dataSource = DataSource()
+    var listaTarefas by remember { mutableStateOf(listOf<Map<String, Any>>()) }
+    var mensagem by remember { mutableStateOf("") }
+    val auth = Authentication()
+
+
+
+    // Carrega a lista de livros ao abrir a tela
     LaunchedEffect(Unit) {
-        dataSource.listarLivros(
-            onResult = { listaLivros = it },
+        dataSource.listarTarefas(
+            onResult = { tarefas -> listaTarefas = tarefas },
             onFailure = { e -> mensagem = "Erro: ${e.message}" }
         )
     }
 
-    // esse eh o menu lateral do app
+
+
+
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+
+
+
+
+
+    // Menu de navegação
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
+
             ModalDrawerSheet {
-                Text(text = "Menu do App Livros", modifier = Modifier.padding(16.dp))
-                Divider()
                 NavigationDrawerItem(
-                    label = { Text(text = "Cadastro de Livros") },
+                    label = { Text("Usuário", fontWeight = FontWeight.Bold) },
                     selected = false,
-                    onClick = { navController.navigate("CadastroLivros") }
+                    onClick = { }
+                )
+
+
+
+                NavigationDrawerItem(
+                    label = { Text(auth.user?.email.toString()) },
+                    selected = false,
+                    onClick = { }
+                )
+
+
+
+                NavigationDrawerItem(
+                    label = { Text("Logout") },
+                    selected = false,
+                    icon = { Icon(Icons.Default.Close, contentDescription = "") },
+                    onClick = {
+                        auth.logout()
+                        navController.navigate("Login")
+                    }
+                )
+
+
+
+
+
+                HorizontalDivider()
+
+
+
+                Text(
+                    "Menu de Opções",
+                    modifier = Modifier.padding(16.dp),
+                    fontWeight = FontWeight.Bold
+                )
+                NavigationDrawerItem(
+                    label = { Text(text = "Lista de Tarefas") },
+                    selected = false,
+                    onClick = { navController.navigate("ListaTarefa") }
+                )
+                NavigationDrawerItem(
+                    label = { Text(text = "Cadastrar Tarefas") },
+                    selected = false,
+                    onClick = { navController.navigate("CadastroTarefa") }
                 )
             }
         }
-    ) {
-        // estrutura principal da tela
+    )
+
+
+
+    {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                // barra de cima da tela
                 TopAppBar(
-                    title = { Text("Lista de Livros") },
+                    title = { Text("Livros Cadastrados") },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = BlueDark,
-                        titleContentColor = White
+                        containerColor = Color(0xFF2E7D32),
+                        titleContentColor = Color.White
                     ),
                     navigationIcon = {
-                        // botao do menu hamburguer (abre e fecha drawer)
                         IconButton(
                             onClick = {
                                 scope.launch {
@@ -77,136 +169,157 @@ fun ListaLivros(navController: NavController) {
                                     else drawerState.close()
                                 }
                             }
-                        ) {
+                        )
+
+
+
+
+                        {
                             Icon(
                                 Icons.Default.Menu,
                                 contentDescription = "Menu",
-                                tint = White,
-                                modifier = Modifier.size(30.dp)
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                     }
                 )
             },
-            bottomBar = { BottomAppBar { } }, // rodapé vazio por enquanto
+
+
+
+            bottomBar = {
+                BottomAppBar(containerColor = Color(0xFF388E3C)) {
+                    Text(
+                        "VAF",
+                        color = Color.White,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            },
+
+
+
+
             floatingActionButton = {
-                // botao flutuante q leva pro cadastro de livros
-                FloatingActionButton(onClick = { navController.navigate("CadastroLivros") }) {
-                    Icon(Icons.Default.Info, contentDescription = "Adicionar")
+
+                FloatingActionButton(
+                    onClick = { navController.navigate("CadastroLivros") },
+                    containerColor = Color(0xFF66BB6A),
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Adicionar")
                 }
             }
         )
 
 
+
         { innerPadding ->
-            // conteudo da tela (embaixo do topbar)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(GrayLight)
                     .padding(innerPadding)
+                    .padding(12.dp)
             )
 
 
 
+
+
             {
-                // lista vertical (scroll) de livros
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(listaLivros) { livro ->
+                    items(listaTarefas) { tarefa ->
+                        val titulo = tarefa["tarefa"] as? String ?: "Sem título"
+                        val genero = tarefa["genero"] as? String ?: "Sem gênero"
+                        val autor = tarefa["autor"] as? String ?: "Sem autor"
+                        val descricao = tarefa["descricao"] as? String ?: "Sem descrição"
 
-
-                        // pega os valores do livro, se nao tiver coloca texto default
-                        val t = livro["titulo"] as? String ?: "Sem título"
-                        val a = livro["autor"] as? String ?: "Sem autor"
-                        val g = livro["genero"] as? String ?: "Sem gênero"
-
-
-
-
-
-                        // card q mostra o livro
-                        Card(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            elevation = CardDefaults.cardElevation(4.dp),
-                            colors = CardDefaults.cardColors(containerColor = White)
-                        ) {
+                                .padding(8.dp)
+                        )
+
+
+
+
+                        {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(16.dp)
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             )
 
 
 
-
-
                             {
-                                // coluna com as infos do livro
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("📌 $t", fontWeight = FontWeight.Bold, color = BlueDark)
-                                    Text("Autor: $a", color = GrayDark)
-                                    Text("Gênero: $g", color = GrayDark)
-                                }
+                                Text(
+                                    "📖 $titulo",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1B5E20),
+                                    fontSize = 18.sp
+                                )
+                                Row {
+                                    IconButton(
+                                        onClick = {
+                                            dataSource.deletarTarefa(titulo)
+                                            navController.navigate("ListaLivros")
+                                        }
+                                    )
 
 
 
-
-
-                                // botao de deletar livro
-                                IconButton(
-                                    onClick = {
-                                        dataSource.deletarLivro(t)
-                                        dataSource.listarLivros(
-                                            onResult = { listaLivros = it },
-                                            onFailure = { mensagem = "Erro: ${it.message}" }
+                                    {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Apagar livro",
+                                            tint = Color.Red,
+                                            modifier = Modifier.size(24.dp)
                                         )
                                     }
-                                )
-
-
-
-                                {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = "Excluir livro",
-                                        tint = androidx.compose.ui.graphics.Color.Red,
-                                        modifier = Modifier.size(24.dp)
+                                    Spacer(modifier = Modifier.size(8.dp))
+                                    IconButton(
+                                        onClick = {
+                                            navController.navigate(
+                                                "exibirDescricao/$titulo/$genero/$autor/$descricao"
+                                            )
+                                        }
                                     )
-                                }
 
 
 
 
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                // botao q leva pra tela de detalhes
-                                IconButton(
-                                    onClick = {
-                                        navController.navigate("DetalhesLivro/${t}/${a}/${g}")
+                                    {
+                                        Icon(
+                                            Icons.Default.Info,
+                                            contentDescription = "Descrição livro",
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(24.dp)
+                                        )
                                     }
-                                )
-
-
-
-
-                                {
-                                    Icon(
-                                        Icons.Default.Info,
-                                        contentDescription = "Detalhes do livro",
-                                        tint = BlueDark,
-                                        modifier = Modifier.size(24.dp)
-                                    )
                                 }
                             }
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = Color(0xFF81C784)
+                            )
                         }
                     }
                 }
 
 
 
-                // mostra mensagens de erro ou info
-                Text(text = mensagem, modifier = Modifier.padding(8.dp))
+
+
+                if (mensagem.isNotBlank()) {
+                    Text(
+                        text = mensagem,
+                        modifier = Modifier.padding(8.dp),
+                        color = Color(0xFF2E7D32),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
